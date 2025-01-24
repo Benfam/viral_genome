@@ -55,9 +55,9 @@ RUN tar -xvzf kaiju_db_refseq_2024-08-14.tgz && \
 
 # Install Kaiju
 WORKDIR /opt
-RUN wget https://github.com/bioinformatics-centre/kaiju/releases/download/v1.10.1/kaiju-1.10.1.tar.gz && \
-    tar -xvzf kaiju-1.10.1.tar.gz && \
-    rm kaiju-1.10.1.tar.gz && \
+RUN wget https://github.com/bioinformatics-centre/kaiju/archive/refs/tags/v1.10.1.tar.gz && \
+    tar -xvzf v1.10.1.tar.gz && \
+    rm v1.10.1.tar.gz && \
     cd kaiju-1.10.1/src && \
     make && \
     ln -s /opt/kaiju-1.10.1/bin/kaiju* /usr/local/bin/
@@ -68,7 +68,7 @@ RUN wget https://github.com/marbl/Krona/releases/download/v2.8.1/KronaTools-2.8.
     tar -xvf KronaTools-2.8.1.tar && rm KronaTools-2.8.1.tar
 
 # Add Kaiju and KronaTools to PATH
-ENV PATH="/opt/KronaTools-2.8.1/scripts:/opt/kaiju-1.8.3/bin:$PATH"
+ENV PATH="/opt/KronaTools-2.8.1/scripts:/opt/kaiju-1.10.1/bin:$PATH"
 
 # Set working directory
 WORKDIR /data
