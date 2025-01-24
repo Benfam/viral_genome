@@ -1,0 +1,61 @@
+# Base image
+FROM ubuntu:20.04
+
+# Set working directory
+WORKDIR /data
+
+# Suppress interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install essential dependencies
+RUN apt-get update && apt-get install -y \
+    wget \
+    fastqc \
+    default-jre \
+    git \
+    python3 \
+    python3-pip \
+    curl \
+    build-essential \
+    perl \
+    libz-dev \
+    unzip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Install Miniconda
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh && \
+    bash miniconda.sh -b -p /opt/conda && \
+    rm miniconda.sh && \
+    ln -s /opt/conda/bin/conda /usr/local/bin/conda
+
+# Add Conda to PATH
+ENV PATH="/opt/conda/bin:$PATH"
+
+# Install Kaiju using Conda
+RUN conda install -y -c bioconda kaiju && conda clean -a -y
+
+# Install KronaTools from prebuilt release
+RUN wget https://github.com/marbl/Krona/releases/download/v2.7/KronaTools-2.7.tar && \
+    tar -xvf KronaTools-2.7.tar && \
+    cd KronaTools-2.7 && \
+    chmod +x install.pl && \
+    ./install.pl --prefix /usr/local && \
+    ln -sf /usr/local/bin/ktImportText /usr/local/bin/ && \
+    ./updateTaxonomy.sh && \
+    ./updateAccessions.sh || true && \
+    cd .. && rm -rf KronaTools-2.7 KronaTools-2.7.tar
+
+# Add /usr/local/bin to PATH
+ENV PATH="/usr/local/bin:$PATH"
+
+# Debugging and Verification
+RUN echo "Checking /usr/local/bin contents:" && ls /usr/local/bin
+RUN echo "PATH environment variable:" && echo $PATH
+
+# Test installations
+RUN kaiju -h || true
+RUN ktImportText -h || true
+
+# Set default command
+CMD ["bash"]
