@@ -7,7 +7,7 @@ params.database = "kaijuDb"
 process Classfier {
     tag "virus-specific classification"
     publishDir "${params.output_dir}", pattern: "*.kaiju", mode: "copy"
-    container "harby/taxa_tool:latest"
+    container "harbby1/taxa_tool:latest"
         
     input:
     tuple val(sample_id), path(reads)
@@ -28,7 +28,7 @@ process Classfier {
 }
 process Kronaformat {
     tag "Convert Kaiju output to Krona-compatible format"
-    container "harby/taxa_tool:latest"
+    container "harbby1/taxa_tool:latest"
 
 
     input:
@@ -50,7 +50,7 @@ process Kronaformat {
 }
 process Visualize {
     tag "Generating Krona HTML visualization..."
-    container "harby/taxa_tool:latest"
+    container "harbby1/taxa_tool:latest"
     publishDir ${params.output_dir},  mode: "copy"
 
     input:
