@@ -1,0 +1,7 @@
+.nextflow*
+data
+kaijuDb
+kaiju_db_*
+work
+results
+
