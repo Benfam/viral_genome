@@ -8,6 +8,7 @@ process Classfier {
     tag "virus-specific classification"
     publishDir "${params.output_dir}", pattern: "*.kaiju", mode: "copy"
     container "harbby1/taxa_tool:latest"
+    cpus 16
         
     input:
     tuple val(sample_id), path(reads)
@@ -18,8 +19,7 @@ process Classfier {
 
     script:
     """
-    mkdir kaiju_class
-    kaiju -t "${database}/nodes.dmp" \
+    kaiju -z $task.cpus -t "${database}/nodes.dmp" \
       -f "${database}/kaiju_db_viruses.fmi" \
       -i ${reads[0]} \
       -j ${reads[1]} \
