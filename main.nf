@@ -14,7 +14,7 @@ process Classfier {
     each path(database)
 
     output:
-    tuple val(sample_id) path ("${sample_id}_viruses.kaiju") emit: class 
+    tuple val(sample_id), path ("${sample_id}_viruses.kaiju"), emit: taxa
 
     script:
     """
@@ -32,12 +32,12 @@ process Kronaformat {
 
 
     input:
-    tuple val(sample_id) path (sample_id_kaiju_file)
+    tuple val(sample_id), path (sample_id_kaiju_file)
     each path(database)
     
     
     output:
-     tuple val(sample_id) path ("${sample_id}_viruses.krona") emit: format 
+     tuple val(sample_id), path ("${sample_id}_viruses.krona"), emit: format 
 
 
     script:
@@ -51,12 +51,12 @@ process Kronaformat {
 process Visualize {
     tag "Generating Krona HTML visualization..."
     container "harbby1/taxa_tool:latest"
-    publishDir ${params.output_dir},  mode: "copy"
+    publishDir "${params.output_dir}/html",  mode: "copy"
 
     input:
-    tuple val(sample_id) path(sample_id_krona_file)
+    tuple val(sample_id), path(sample_id_krona_file)
     output:
-    path html_files
+    path "html_files"
 
     script:
     """
@@ -81,7 +81,7 @@ workflow {
     database_ch = Channel.fromPath(params.database, checkIfExists: true, type: 'dir')
     database_ch.view()
     Classfier(input_files_ch, database_ch)
-    Kronaformat(Classfier.out.class, database_ch)
+    Kronaformat(Classfier.out.taxa, database_ch)
     Visualize(Kronaformat.out.format)
 
 
