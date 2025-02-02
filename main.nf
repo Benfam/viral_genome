@@ -1,14 +1,14 @@
 nextflow.enable.dsl = 2
 
-params.input_files = "$projectDir/data/*_{R1,R2}_001.fastq.gz"
+params.input_files = "$projectDir/data/*_{R1,R2}_*.fastq.gz"
 params.output_dir = "results/data"
 params.database = "kaijuDb"
 
 process Classfier {
     tag "virus-specific classification"
     publishDir "${params.output_dir}", pattern: "*.kaiju", mode: "copy"
-    container "harbby1/taxa_tool:latest"
-    cpus 16
+    container "harbby1/taxatools"
+    cpus 6
         
     input:
     tuple val(sample_id), path(reads)
@@ -28,7 +28,7 @@ process Classfier {
 }
 process Kronaformat {
     tag "Convert Kaiju output to Krona-compatible format"
-    container "harbby1/taxa_tool:latest"
+    container "harbby1/taxatools"
 
 
     input:
@@ -50,20 +50,19 @@ process Kronaformat {
 }
 process Visualize {
     tag "Generating Krona HTML visualization..."
-    container "harbby1/taxa_tool:latest"
-    publishDir "${params.output_dir}/html",  mode: "copy"
+    container "harbby1/taxatools"
+    publishDir "${params.output_dir}/html", pattern: "*.html", mode: "copy"
 
     input:
     tuple val(sample_id), path(sample_id_krona_file)
     output:
-    path "html_files"
+    path ("*.html", arity: '1..*')
 
     script:
     """
-    mkdir html_files
     perl /opt/KronaTools-2.8.1/scripts/ImportText.pl \
      "$sample_id_krona_file" \
-     -o "html_files/${sample_id}_viruses.html"
+     -o "${sample_id}_viruses.html"
     """
 }
 
