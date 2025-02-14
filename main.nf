@@ -1,12 +1,12 @@
 nextflow.enable.dsl = 2
 
 params.input_files = "$projectDir/data/*_{R1,R2}_001.fastq.gz"
-params.output_dir = "results/data"
+params.output_dir = "results"
 params.database = "kaijuDb"
 
 process Classfier {
     tag "virus-specific classification"
-    publishDir "${params.output_dir}", pattern: "*.kaiju", mode: "copy"
+    publishDir "${params.output_dir}/class", pattern: "*.kaiju", mode: "copy"
     container "harbby1/taxa_tool:latest"
     cpus 16
         
@@ -51,7 +51,7 @@ process Kronaformat {
 process Visualize {
     tag "Generating Krona HTML visualization..."
     container "harbby1/taxa_tool:latest"
-    publishDir "${params.output_dir}/html",  mode: "copy"
+    publishDir "${params.output_dir}/table", mode: "copy"
 
     input:
     tuple val(sample_id), path(sample_id_krona_file)
@@ -64,6 +64,28 @@ process Visualize {
     perl /opt/KronaTools-2.8.1/scripts/ImportText.pl \
      "$sample_id_krona_file" \
      -o "html_files/${sample_id}_viruses.html"
+    """
+}
+
+process GenerateTable{
+    tag "Generate table of viral taxa"
+    container "harbby1/taxa_tool:latest"
+    publishDir "${params.output_dir}", mode: "copy"
+
+    input:
+    tuple val(sample_id), path(sample_id_kaiju_file)
+    each path(database)
+
+    output:
+    path "kaiju.names.out", emit: taxatable
+
+    script:
+    """
+    kaiju-addTaxonNames \
+        -t "${database}/nodes.dmp" \
+        -n "${database}/names.dmp" \
+        -i $sample_id_kaiju_file \
+        -o kaiju.names.out
     """
 }
 
@@ -83,6 +105,7 @@ workflow {
     Classfier(input_files_ch, database_ch)
     Kronaformat(Classfier.out.taxa, database_ch)
     Visualize(Kronaformat.out.format)
+    GenerateTable(Classfier.out.taxa, database_ch)
 
 
 }
