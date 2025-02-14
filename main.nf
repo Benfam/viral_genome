@@ -1,25 +1,14 @@
 nextflow.enable.dsl = 2
 
-<<<<<<< HEAD
-params.input_files = "$projectDir/data/*_{R1,R2}_001.fastq.gz"
-params.output_dir = "results"
-=======
 params.input_files = "$projectDir/data/*_{R1,R2}_*.fastq.gz"
 params.output_dir = "results/data"
->>>>>>> 3f2a4294cf92aed0209e8ca725af733928f2b3b9
 params.database = "kaijuDb"
 
 process Classfier {
     tag "virus-specific classification"
-<<<<<<< HEAD
-    publishDir "${params.output_dir}/class", pattern: "*.kaiju", mode: "copy"
-    container "harbby1/taxa_tool:latest"
-    cpus 16
-=======
     publishDir "${params.output_dir}", pattern: "*.kaiju", mode: "copy"
     container "harbby1/taxatools"
     cpus 6
->>>>>>> 3f2a4294cf92aed0209e8ca725af733928f2b3b9
         
     input:
     tuple val(sample_id), path(reads)
@@ -61,13 +50,8 @@ process Kronaformat {
 }
 process Visualize {
     tag "Generating Krona HTML visualization..."
-<<<<<<< HEAD
-    container "harbby1/taxa_tool:latest"
-    publishDir "${params.output_dir}/table", mode: "copy"
-=======
     container "harbby1/taxatools"
     publishDir "${params.output_dir}/html", pattern: "*.html", mode: "copy"
->>>>>>> 3f2a4294cf92aed0209e8ca725af733928f2b3b9
 
     input:
     tuple val(sample_id), path(sample_id_krona_file)
@@ -84,15 +68,16 @@ process Visualize {
 
 process GenerateTable{
     tag "Generate table of viral taxa"
-    container "harbby1/taxa_tool:latest"
-    publishDir "${params.output_dir}", mode: "copy"
+    container "harbby1/taxatools"
+    publishDir "${params.output_dir}/tables", mode: "copy", pattern: "*.out"
 
     input:
     tuple val(sample_id), path(sample_id_kaiju_file)
     each path(database)
 
     output:
-    path "kaiju.names.out", emit: taxatable
+    path ("*.out", arity: '1..*')
+
 
     script:
     """
@@ -100,7 +85,7 @@ process GenerateTable{
         -t "${database}/nodes.dmp" \
         -n "${database}/names.dmp" \
         -i $sample_id_kaiju_file \
-        -o kaiju.names.out
+        -o "${sample_id}_table.out"
     """
 }
 
